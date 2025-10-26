@@ -1,0 +1,10 @@
+
+# comment should not be included
+
+hello\ this\ is\ a\ test:		# comment after tab
+\x01aa \f10.0 \10 \-10 \f-9.543	\w255 \b255
+
+32 \w-255 \b-10
+
+
+
