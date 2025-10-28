@@ -13,13 +13,13 @@ struct optional_args {
 };
 
 static struct optional_args full_list[] = {
-	INIT_CMD('i', "Convert input to packet"),
+	INIT_CMD('f', "Convert contents of file to packet"),
 	INIT_CMD('o', "Output file. STDOUT by default"),	
 	INIT_CMD('e', "Convert data using system's endianness"),
 	INIT_CMD('h', "Help"),
 };
 
-static char* file_path = NULL;
+static char* buffer = NULL;
 
 static int update_list(int i, int argc, char** argv);
 
@@ -37,12 +37,12 @@ int parse_args(int argc, char** argv)
 
 char* get_file()
 {
-	return file_path;
+	return full_list[0].arg;
 }
 
 char* get_input()
 {
-	return full_list[0].arg;
+	return buffer;
 }
 
 char* get_output()
@@ -63,7 +63,7 @@ unsigned char get_help()
 void print_optional_args()
 {
 	for (unsigned int i = 0; i < LEN(full_list); i++) {
-		printf("%c: %s\n", full_list[i].opt, full_list[i].desc);
+		printf("\t-%c: %s\n", full_list[i].opt, full_list[i].desc);
 	}	
 }
 
@@ -71,15 +71,15 @@ static int update_list(int i, int argc, char** argv)
 {
 	char* current = argv[i];
 	if (current[0] != '-') {
-		if (file_path) {
+		if (buffer) {
 			return -1;
 		}
-		file_path = current;
+		buffer = current;
 		return i;
 	}
 	
 	switch (current[1]) {
-		case 'i':
+		case 'f':
 			if (full_list[0].fill) {
 				return -1;
 			}

@@ -9,10 +9,11 @@
 
 void print_usage(char* progname)
 {
-	printf(	"usage: %s <file> [-i extra_packet] [-h] [-e]\n\n"
-			"file is not required if extra_packet is present\n"
-			"if both file and extra_packet are present, then"
-			" extra_packet is concatenated after file.\n\n", progname);
+	printf(	"usage: %s <message> [-f file] [-h] [-e] [-o output_file]\n\n"
+			"message is not required if file is present\n"
+			"if both file and message are present, then"
+			" message is concatenated after file.\n"
+			"Options:\n", progname);
 	print_optional_args();
 }
 
@@ -23,7 +24,7 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 	char* ifile = get_file();
-	char* iextra = get_input();
+	char* imessage = get_input();
 	char* ofile = get_output();
 
 	convert_endianness(get_endianness());
@@ -37,5 +38,5 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 	
-	return mkpckt(ifile, iextra, ostream);
+	return mkpckt(ifile, imessage, ostream);
 }
