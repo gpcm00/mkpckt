@@ -27,6 +27,15 @@ typedef enum {
     N_STR_TYPES,    
 } strtype_t;
 
+union data_t {
+	size_t n;
+	int32_t dw;		
+	int16_t w;
+	int8_t b;
+
+	float f;
+};
+
 static bool change_endianness = true;
 
 // char to hex
@@ -37,11 +46,14 @@ static INLINE_FUNCTION char c2h(char c)
 	if (c >= 'a' && c <= 'f') return c - 'a' + 10;
 	return 0;
 }
+
+// change the endianess of a 16-bit number
 static INLINE_FUNCTION short worder(short w)
 {
 	return (change_endianness)? __builtin_bswap16(w) : w;
 }
 
+// change the endianess of a 32-bit number
 static INLINE_FUNCTION int dworder(int dw)
 {
 	return (change_endianness)? __builtin_bswap32(dw) : dw;
@@ -58,6 +70,9 @@ static char* get_next_line(char* buffer);
 static size_t strtohex(char* c, size_t sz);
 static bool write_to_file(void* c, size_t len, FILE* ostream);
 
+/* converts the contents of the file in path and the extra buffer into
+ * the pckt format. output is written to ostream
+ **********************************************************************/
 int mkpckt(char* path, char* extra, FILE* ostream)
 {
 	char* fbuffer = NULL;
@@ -80,11 +95,17 @@ int mkpckt(char* path, char* extra, FILE* ostream)
 	return 0;
 }
 
+/* sets the global flag that signals endianness should be opposite of
+ * the endianness of the current system
+ **********************************************************************/
 void convert_endianness(char endianess)
 {
 	change_endianness = (endianess != 0);		
 }
 
+/* reads the file from path and allocates its contents into a buffer
+ * the return is a dynamically allocated buffer that needs to freed
+ **********************************************************************/
 static char *alloc_fbuffer(char* path)
 {
     char* fbuffer = NULL;
@@ -117,13 +138,16 @@ Clean_Fstream:
     return fbuffer;
 }
 
+/* converts the buffer in mkpckt format into a bytestream. output is 
+ * written into ostream
+ **********************************************************************/
 static bool parse_buffer(char* buffer, FILE* ostream)
 {
 	size_t len = 0;
 	char* next = NULL;
 	char* current;
 	strtype_t type = STR_UNKNOWN;
-	
+	union data_t num;	
 	current = buffer;    
 
 	while ((len = parse_next(current, &next, &type)) > 0) {
@@ -135,40 +159,39 @@ static bool parse_buffer(char* buffer, FILE* ostream)
 				break;
 	
 			case STR_HEX:
-				size_t n = strtohex(next+2, len-2);
-				if (!write_to_file(next+2, n, ostream)) {
+				num.n = strtohex(next+2, len-2);
+				if (!write_to_file(next+2, num.n, ostream)) {
 					return false;
 				}
 				break;
 				
 			case STR_BYTE:
-				char bnum = strtol(next+2, NULL, 10);
-				if (!write_to_file(&bnum, sizeof(char), ostream)) {
+				num.b = strtol(next+2, NULL, 10);
+				if (!write_to_file(&num.b, sizeof(int8_t), ostream)) {
 					return false;
 				}
 				break;
 
 			case STR_WORD:
-				short wnum = strtol(next+2, NULL, 10);
-				wnum = worder(wnum);
-				if (!write_to_file(&wnum, sizeof(short), ostream)) {
+				num.w = strtol(next+2, NULL, 10);
+				num.w = worder(num.w);
+				if (!write_to_file(&num.w, sizeof(int16_t), ostream)) {
 					return false;
 				}
 				break;
 
 			case STR_INT:
-				int inum = strtol(next+1, NULL, 10);
-				inum = dworder(inum);
-				if (!write_to_file(&inum, sizeof(int), ostream)) {
+				num.dw = strtol(next+1, NULL, 10);
+				num.dw = dworder(num.dw);
+				if (!write_to_file(&num.dw, sizeof(int32_t), ostream)) {
 					return false;
 				}
 				break;
 
 			case STR_FLOAT:
-				float fnum = strtof(next+2, NULL);
-				int* ifnum = (int*)&fnum;
-				*ifnum = dworder(*ifnum);
-				if (!write_to_file(ifnum, sizeof(int), ostream)) {
+				num.f = strtof(next+2, NULL);
+				num.dw = dworder(num.dw);
+				if (!write_to_file(&num.f, sizeof(float), ostream)) {
 					return false;
 				}
 				break;				
@@ -188,6 +211,8 @@ static bool parse_buffer(char* buffer, FILE* ostream)
 	return true;
 }
 
+/* parse the next data on the buffer removing spaces and comments
+ **********************************************************************/
 static size_t parse_next(char* buffer, char** next, strtype_t* type)
 {
 	buffer = remove_spaces(buffer);	
@@ -213,6 +238,8 @@ static size_t parse_next(char* buffer, char** next, strtype_t* type)
     return parse_name(buffer);
 }
 
+/* parse words that start with \ and convert them accordingly 
+ **********************************************************************/
 static size_t parse_special(char* buffer, strtype_t* type)
 {
     size_t sz = 1;
@@ -270,6 +297,8 @@ static size_t parse_special(char* buffer, strtype_t* type)
 	} 
 }
 
+/* just parse the normal word and print it as it is
+ **********************************************************************/
 static size_t parse_name(char* buffer)
 {
 	size_t sz = 0;
@@ -283,6 +312,8 @@ static size_t parse_name(char* buffer)
 	return sz;
 }
 
+/* remove space tabs and newlines
+ **********************************************************************/
 static char* remove_spaces(char* buffer)
 {
 	while (*buffer == ' ' || *buffer == '\n' || *buffer == '\t') {
@@ -291,6 +322,8 @@ static char* remove_spaces(char* buffer)
 	return buffer;
 }
 
+/* ignores everything until a newline is reached
+ **********************************************************************/
 static char* get_next_line(char* buffer)
 {
 	while (*(buffer++) != '\n') {
@@ -302,7 +335,10 @@ static char* get_next_line(char* buffer)
 	return buffer;
 }
 
-
+/* converts a sequence of hex numbers given in string format into
+ * actual hex numbers. the output is in byte stream format, so the
+ * hex values are preserved no matter the endianness
+ **********************************************************************/
 static size_t strtohex(char* str, size_t sz)
 {
 	size_t i = 0;
@@ -311,7 +347,7 @@ static size_t strtohex(char* str, size_t sz)
 		str[i] = c2h(str[2*i+1]) | c2h(str[2*i]) << 4;
 	}
 
-	if (n_bytes % 2) {
+	if (sz % 2) {
 		str[i] = c2h(str[2*i]);
 		i++;
 	}
@@ -319,6 +355,8 @@ static size_t strtohex(char* str, size_t sz)
 	return i;
 }
 
+/* writes a fixed amount of data into a file and handle error if error
+ **********************************************************************/
 static bool write_to_file(void* c, size_t len, FILE* ostream)
 {
 	size_t total = 0;
