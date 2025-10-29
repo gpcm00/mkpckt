@@ -1,4 +1,5 @@
-mkpckt	
+./mkpckt	
+tst/phex
 
 # Prerequisites
 *.d
