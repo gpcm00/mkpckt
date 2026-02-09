@@ -1,5 +1,6 @@
 mkpckt	
 tst/phex
+tst/test_packet
 
 # Prerequisites
 *.d

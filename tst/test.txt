@@ -1,10 +1,25 @@
 
 # comment should not be included
 
-hello\ this\ is\ a\ test:		# comment after tab
-\x01aa \f10.0 \10 \-10 \f-9.543	\w255 \b255
+# special charactes after are:
+# \f for float
+# \w for a word (16-bit number)
+# \b for a byte (8-bit number)
+# \x for a hex string
+# \(number) for a 32-bit integer
 
-32 \w-255 \b-10
+this\ is\ a\ test:       # comment after tab
+integer:  \100                  # outputs 0x00000064
+          \-100                 # outputs 0xffffff9c
 
+words:                          # aka shorts
+          \w255                  # outputs 0x00ff
+          \w-128                 # outputs 0xff08
 
+bytes:    \b64                  # outputs 0x40
+          \b-64                 # outputs 0xc0
 
+float:    \f1.00                # outputs 0x3f800000
+          \f-1.00               # outputs 0xBF800000
+
+hex:      \x01020304050607      # outputs 0x01020304050607 independent of the endianness

@@ -206,7 +206,7 @@ static bool parse_buffer(char* buffer, FILE* ostream)
 				break;
 		}
 		current = next + len;
-	} while (len > 0);
+	}
 	
 	return true;
 }
@@ -219,9 +219,9 @@ static size_t parse_next(char* buffer, char** next, strtype_t* type)
     
 	while (*buffer == '#') {
         buffer = get_next_line(buffer);
+		buffer = remove_spaces(buffer);
     }
-	
-	buffer = remove_spaces(buffer);	
+		
 	
 	if (*buffer == '\0') {
 		return 0;

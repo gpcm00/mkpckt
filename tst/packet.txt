@@ -1,0 +1,10 @@
+\xAA5555AA                          # header
+\w60123                             # port
+\b15                                # type
+\b0                                 # padding
+
+# payload
+\21     \32         \4      \10
+\f0.51  \f-0.37123  \f-0.91 \f1.48
+
+Signature\b0\b0
