@@ -33,7 +33,7 @@ int main() {
         printf("%02X ", packet->header[i]);
     }
 
-    printf("\n\nPort: %X\n", packet->port);
+    printf("\n\nPort: %d\n", packet->port);
 
     printf("\n\nPayload:\n");
 
