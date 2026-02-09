@@ -12,7 +12,8 @@ typedef union data_t
 struct packet {
     uint8_t header[4];
     uint16_t port;
-    uint8_t type;
+    uint8_t type;           // if bit n is a 1 then payload[n] is an int
+                            // otherwise it is a float
 
     uint8_t padding;        // keep data_t 32-bit aligned
 
@@ -26,13 +27,25 @@ extern char raw_bytes[sizeof(struct packet)];
 int main() {
     struct packet* packet = (struct packet*)raw_bytes;
 
+    printf("Header:\n");
+
+    for (int i = 0; i < 4; i++) {
+        printf("%02X ", packet->header[i]);
+    }
+
+    printf("\n\nPort: %X\n", packet->port);
+
+    printf("\n\nPayload:\n");
+
     for (int i = 0; i < 8; i++) {
         if (packet->type & (1<<(i))) {
-            printf("%d \n", packet->payload[i].as_int);
+            printf("%d, ", packet->payload[i].as_int);
         } else {
-            printf("%f \n", packet->payload[i].as_float);
+            printf("%.5f, ", packet->payload[i].as_float);
         }
     }
 
-    printf("%s\n", packet->signature);
+    printf("\n\n%s\n", packet->signature);
+
+    return 0;
 }
