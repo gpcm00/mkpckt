@@ -2,6 +2,8 @@
 
 This tool generates sequences of bytes and lets you mix floats, hex strings, 32-bit integers, 16-bit integers, 8-bit integers, and characters in one command.
 
+Works alongside userspace utilities (like spidev_test) to quickly transmit custom packets for bus bring-up and debugging.
+
 # Usage
 
         make            # compile code
