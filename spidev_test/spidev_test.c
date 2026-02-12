@@ -34,7 +34,7 @@ void print_buffer(uint8_t* buffer, uint32_t len, char* header)
 
 /*	main pseudo code:
 	
-	if (piped_over_stdin) {
+	if (piped over stdin) {
 		txbuffer = read(stdin)
 	} else {
 		txbuffer = read(file pointed by argv[1])
