@@ -32,6 +32,21 @@ void print_buffer(uint8_t* buffer, uint32_t len, char* header)
 	putc('\n', stdout);
 }
 
+/*	main pseudo code:
+	
+	if (piped_over_stdin) {
+		txbuffer = read(stdin)
+	} else {
+		txbuffer = read(file pointed by argv[1])
+	}
+	
+	ioctl(SPI_IOC_MESSAGE, &txbuffer, &rxbuffer)	
+	// ioctl(SPI_IOC_MESSAGE) reads and writes at the same time 
+	// since spi is full-duplex
+
+	print(txbuffer)
+	print(rxbuffer) 		
+******************************************************************/
 
 int main(int argc, char** argv)
 {
@@ -93,6 +108,7 @@ int main(int argc, char** argv)
             goto Error_Exit_Function;
 		}
 
+		// check size of file
 		xfer_len = txbuffer_stat.st_size;
         if (xfer_len == 0) {
             fprintf(stderr, "Empty file\n");
@@ -122,6 +138,7 @@ int main(int argc, char** argv)
 		close(txbuffer_fd);	// done with file
 	}
 
+	// initialize rxbuffer
     rxbuffer = (uint8_t*)malloc(xfer_len);
 	if (rxbuffer == NULL) {
 		perror("malloc(rxbuffer)");
@@ -129,14 +146,13 @@ int main(int argc, char** argv)
         goto Error_Clean_TxBuffer;
 	}
 
+	// open spidev device
 	spidev_fd = open(SPIDEV_PATH, O_RDWR);
 	if (spidev_fd < 0) {
 		perror("open(/dev/spidev)");
 		exit_code = EXIT_FAILURE;
         goto Error_Clean_RxBuffer;
 	}
-
-	print_buffer(txbuffer, xfer_len, "Tx Buffer");
 	
 	// initialize spi ioc
 	memset(&xfer, 0, sizeof(xfer));
@@ -147,6 +163,7 @@ int main(int argc, char** argv)
 	xfer.speed_hz = speed;
 	xfer.bits_per_word = bits;
 
+	// set bus info
 	uint8_t mode = 0;
 	if (ioctl(spidev_fd, SPI_IOC_WR_MODE, &mode) < 0	  ||
 	    ioctl(spidev_fd, SPI_IOC_WR_BITS_PER_WORD, &bits) < 0 ||
@@ -163,6 +180,7 @@ int main(int argc, char** argv)
         goto Error_Clean_FileDesc;
 	}
 
+	print_buffer(txbuffer, xfer_len, "Tx Buffer");
 	print_buffer(rxbuffer, xfer_len, "Rx Buffer");
 
 Error_Clean_FileDesc: close(spidev_fd);
