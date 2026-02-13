@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 # Optional:
-#   ./build.sh /dev/spidev1.0
+#   ./compile_spidev_test.sh /dev/spidev1.0
 # or
-#   ./build.sh
+#   ./compile_spidev_test.sh
 
 cd $(realpath $(dirname $0))
 
