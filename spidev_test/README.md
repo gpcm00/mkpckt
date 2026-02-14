@@ -23,8 +23,6 @@ Designed for quick bus bring-up, debugging, and custom packet testing.
 - Linux system with spidev enabled
 - SPI device exposed under `/dev/spidevX.Y`
 - GCC or compatible compiler
-- Kernel headers providing:
-
 
 ---
 
