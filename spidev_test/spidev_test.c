@@ -86,12 +86,6 @@ int main(int argc, char** argv)
 			exit_code = EXIT_FAILURE;
             goto Error_Exit_Function;
 		}
-
-		if (access(argv[1], R_OK) < 0) {
-			fprintf(stderr, "access(%s, R_OK): %s\n", argv[1], strerror(errno));
-			exit_code = EXIT_FAILURE;
-            goto Error_Exit_Function;
-		}
 		
 		txbuffer_fd = open(argv[1], O_RDONLY);
 		if (txbuffer_fd < 0) {
